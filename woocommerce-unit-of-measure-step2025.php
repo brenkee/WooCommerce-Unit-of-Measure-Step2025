@@ -34,12 +34,15 @@ add_action( 'woocommerce_admin_process_product_object', array( __CLASS__, 'save_
 add_filter( 'woocommerce_quantity_input_args', array( __CLASS__, 'filter_quantity_args' ), 20, 2 );
 add_filter( 'woocommerce_quantity_input', array( __CLASS__, 'inject_data_attributes' ), 20, 3 );
 
-// Adjust quantities on add to cart and cart updates.
-add_filter( 'woocommerce_add_to_cart_quantity', array( __CLASS__, 'adjust_add_to_cart_quantity' ), 20, 2 );
-add_filter( 'woocommerce_update_cart_validation', array( __CLASS__, 'validate_cart_update' ), 20, 4 );
+        // Adjust quantities on add to cart and cart updates.
+        add_filter( 'woocommerce_add_to_cart_quantity', array( __CLASS__, 'adjust_add_to_cart_quantity' ), 20, 2 );
+        add_filter( 'woocommerce_update_cart_validation', array( __CLASS__, 'validate_cart_update' ), 20, 4 );
 
-// Assets and notices.
-add_action( 'wp_enqueue_scripts', array( __CLASS__, 'enqueue_assets' ) );
+        // Assets and notices.
+        add_action( 'wp_enqueue_scripts', array( __CLASS__, 'enqueue_assets' ) );
+
+        // Output formatting.
+        add_filter( 'woocommerce_email_order_item_quantity', array( __CLASS__, 'format_email_quantity' ), 10, 2 );
 
 // Settings page.
 add_action( 'admin_menu', array( __CLASS__, 'register_settings_page' ) );
@@ -394,10 +397,10 @@ return array(
 );
 }
 
-protected static function normalize_quantity( $quantity, $rules, $direction = 'nearest' ) {
-$step      = $rules['step'] > 0 ? $rules['step'] : 1;
-$min       = $rules['min'] > 0 ? $rules['min'] : $step;
-$precision = isset( $rules['precision'] ) ? absint( $rules['precision'] ) : 0;
+    protected static function normalize_quantity( $quantity, $rules, $direction = 'nearest' ) {
+        $step      = $rules['step'] > 0 ? $rules['step'] : 1;
+        $min       = $rules['min'] > 0 ? $rules['min'] : $step;
+        $precision = isset( $rules['precision'] ) ? absint( $rules['precision'] ) : 0;
 
 $quantity = is_numeric( $quantity ) ? (float) $quantity : $min;
 
@@ -430,15 +433,32 @@ $quantity = (float) $max;
 
 if ( $quantity < $min ) {
 $quantity = $min;
-}
+        }
 
-return round( $quantity, $precision );
-}
+        return round( $quantity, $precision );
+    }
 
-protected static function add_adjustment_notice( $product, $requested, $quantity ) {
-$settings = self::get_settings();
-$message  = strtr(
-$settings['notice_text'],
+    public static function format_email_quantity( $qty_display, $item ) {
+        if ( ! is_object( $item ) || ! method_exists( $item, 'get_product' ) ) {
+            return $qty_display;
+        }
+
+        $product = $item->get_product();
+
+        if ( ! $product ) {
+            return $qty_display;
+        }
+
+        $rules     = self::get_rules( $product );
+        $precision = $rules['allow_decimals'] ? $rules['precision'] : 0;
+
+        return wc_format_decimal( $item->get_quantity(), $precision, false );
+    }
+
+    protected static function add_adjustment_notice( $product, $requested, $quantity ) {
+        $settings = self::get_settings();
+        $message  = strtr(
+            $settings['notice_text'],
 array(
 '{product}'   => $product->get_name(),
 '{requested}' => $requested,
