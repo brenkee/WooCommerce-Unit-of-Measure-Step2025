@@ -1,0 +1,12 @@
+.wcuom-inline-message{
+
+    background: white;
+    display: block;
+    z-index: 9999999;
+    position: absolute;
+    width: 330px;
+    border: 2px solid #a8977b;
+    padding: 7px;
+    margin: 4px;
+    box-shadow: -3px 3px 12px 0px #00000061;
+}

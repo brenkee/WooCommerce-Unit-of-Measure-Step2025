@@ -215,33 +215,40 @@ self::add_adjustment_notice( $product, $quantity, $adjusted );
 return $passed;
 }
 
-public static function enqueue_assets() {
-if ( ! function_exists( 'is_woocommerce' ) ) {
-return;
-}
+    public static function enqueue_assets() {
+        if ( ! function_exists( 'is_woocommerce' ) ) {
+            return;
+        }
 
-if ( ! is_cart() && ! is_product() && ! is_shop() && ! is_product_taxonomy() && ! is_product_category() && ! is_product_tag() ) {
-return;
-}
+        if ( ! is_cart() && ! is_product() && ! is_shop() && ! is_product_taxonomy() && ! is_product_category() && ! is_product_tag() ) {
+            return;
+        }
 
-$settings = self::get_settings();
+        $settings = self::get_settings();
 
-wp_enqueue_script(
-'wc-uom-step2025',
-plugins_url( 'assets/js/wc-uom-step2025.js', __FILE__ ),
-array( 'jquery' ),
-'1.0.0',
-true
-);
+        wp_enqueue_style(
+            'wc-uom-step2025',
+            plugins_url( 'assets/css/wc-uom-step2025.css', __FILE__ ),
+            array(),
+            '1.0.0'
+        );
 
-wp_localize_script(
-'wc-uom-step2025',
-'WCUOMStep2025',
-array(
-'noticeText' => $settings['notice_text'],
-)
-);
-}
+        wp_enqueue_script(
+            'wc-uom-step2025',
+            plugins_url( 'assets/js/wc-uom-step2025.js', __FILE__ ),
+            array( 'jquery' ),
+            '1.0.0',
+            true
+        );
+
+        wp_localize_script(
+            'wc-uom-step2025',
+            'WCUOMStep2025',
+            array(
+                'noticeText' => $settings['notice_text'],
+            )
+        );
+    }
 
 public static function register_settings_page() {
 add_submenu_page(
