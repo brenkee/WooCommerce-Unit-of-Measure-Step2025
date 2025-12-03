@@ -140,7 +140,8 @@ $(document).on('click', '.quantity .ct-increase', function (event) {
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation();
-    var $input = $(this).siblings('input.qty');
+    var $wrapper = $(this).closest('.quantity');
+    var $input = $wrapper.find('input.qty').first();
 
     if ($input.length) {
         adjustInput($input, 'up');
@@ -151,11 +152,12 @@ $(document).on('click', '.quantity .ct-decrease', function (event) {
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation();
-    var $input = $(this).siblings('input.qty');
+    var $wrapper = $(this).closest('.quantity');
+    var $input = $wrapper.find('input.qty').first();
 
-if ($input.length) {
-adjustInput($input, 'down');
-}
+    if ($input.length) {
+        adjustInput($input, 'down');
+    }
 });
 
 $(document).on('change blur', '.quantity input.qty', function () {
