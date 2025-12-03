@@ -6,11 +6,6 @@ var num = parseFloat(value);
 return isNaN(num) ? 0 : num;
 }
 
-function getTolerance(precision) {
-var epsilon = Math.pow(10, -(precision || 0)) / 2;
-return epsilon > 0 ? epsilon : 1e-6;
-}
-
 function countDecimals(numberString) {
     if (typeof numberString !== 'string') {
         return 0;
@@ -95,30 +90,6 @@ qty = min;
 return parseFloat(qty.toFixed(rules.precision));
 }
 
-function hideInlineMessage($input) {
-var $wrapper = $input.closest('.quantity');
-
-if (!$wrapper.length) {
-return;
-}
-
-var $message = $wrapper.find('.wcuom-inline-message');
-
-if (!$message.length) {
-return;
-}
-
-var hideTimer = $message.data('wcuom-hide-timer');
-
-if (hideTimer) {
-clearTimeout(hideTimer);
-}
-
-$message.stop(true, true).fadeOut(300, function () {
-$message.removeClass('is-visible');
-});
-}
-
 function showInlineMessage($input, requested, adjusted) {
 if (typeof WCUOMStep2025 === 'undefined' || !WCUOMStep2025.noticeText) {
 return;
@@ -142,42 +113,22 @@ $message = $('<div class="wcuom-inline-message" aria-live="polite"></div>');
 $wrapper.append($message);
 }
 
-$message.stop(true, true).text(message).fadeIn(200).addClass('is-visible');
-
-var existingTimer = $message.data('wcuom-hide-timer');
-
-if (existingTimer) {
-clearTimeout(existingTimer);
-}
-
-$message.data('wcuom-hide-timer', setTimeout(function () {
-$message.fadeOut(400, function () {
-$message.removeClass('is-visible');
-});
-}, 5000));
+$message.text(message);
 }
 
 function adjustInput($input, direction) {
 var rules = getRules($input);
 var raw = $input.val();
-var parsedRequested = parseFloat(raw);
-var hasRequestedNumber = !isNaN(parsedRequested);
-var requested = hasRequestedNumber ? parsedRequested : 0;
-var adjusted = closestValid(hasRequestedNumber ? parsedRequested : NaN, rules, direction || 'nearest');
+var requested = parseNumber(raw);
+var adjusted = closestValid(requested, rules, direction || 'nearest');
 var isAdjusting = $input.data('wcuom-adjusting') === true;
-var tolerance = getTolerance(rules.precision);
 
 if (isAdjusting) {
 return;
 }
 
-var difference = Math.abs(adjusted - requested);
-var shouldShowMessage = !hasRequestedNumber || difference > tolerance;
-
-if (shouldShowMessage) {
+if (adjusted !== requested && !(isNaN(requested) && adjusted === rules.min)) {
 showInlineMessage($input, raw, adjusted);
-} else {
-hideInlineMessage($input);
 }
 
 $input.data('wcuom-adjusting', true);
