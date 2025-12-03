@@ -6,29 +6,51 @@ var num = parseFloat(value);
 return isNaN(num) ? 0 : num;
 }
 
-function getRules($input) {
-var step = parseNumber($input.data('wcuom-step')) || 1;
-var minAttr = $input.data('wcuom-min');
-var maxAttr = $input.data('wcuom-max');
-var min = minAttr === '' || typeof minAttr === 'undefined' ? step : parseNumber(minAttr);
-var max = maxAttr === '' || typeof maxAttr === 'undefined' ? '' : parseNumber(maxAttr);
-var precision = parseInt($input.data('wcuom-precision'), 10);
-precision = isNaN(precision) ? 0 : precision;
-var allowDecimals = $input.data('wcuom-allow-decimal') === 'yes';
+function countDecimals(numberString) {
+    if (typeof numberString !== 'string') {
+        return 0;
+    }
 
-if (!allowDecimals) {
-precision = 0;
-step = Math.max(1, Math.round(step));
-min = Math.max(1, Math.round(min));
+    var parts = numberString.split('.');
+    return parts.length === 2 ? parts[1].length : 0;
 }
 
-return {
-step: step > 0 ? step : 1,
-min: min > 0 ? min : step,
-max: max === '' ? '' : max,
-precision: precision,
-allowDecimals: allowDecimals
-};
+function getRules($input) {
+    var dataStep = parseNumber($input.data('wcuom-step'));
+    var attrStep = parseNumber($input.attr('step'));
+    var step = dataStep || attrStep || 1;
+
+    var minAttr = typeof $input.data('wcuom-min') !== 'undefined' ? $input.data('wcuom-min') : $input.attr('min');
+    var maxAttr = typeof $input.data('wcuom-max') !== 'undefined' ? $input.data('wcuom-max') : $input.attr('max');
+
+    var min = minAttr === '' || typeof minAttr === 'undefined' ? step : parseNumber(minAttr);
+    var max = maxAttr === '' || typeof maxAttr === 'undefined' ? '' : parseNumber(maxAttr);
+
+    var precision = parseInt($input.data('wcuom-precision'), 10);
+    if (isNaN(precision)) {
+        var stepDecimals = countDecimals(String($input.attr('step') || ''));
+        var minDecimals = countDecimals(String(minAttr || ''));
+        precision = Math.max(stepDecimals, minDecimals);
+    }
+
+    var allowDecimals = $input.data('wcuom-allow-decimal') === 'yes';
+    if (!allowDecimals && (step % 1 !== 0 || min % 1 !== 0)) {
+        allowDecimals = true;
+    }
+
+    if (!allowDecimals) {
+        precision = 0;
+        step = Math.max(1, Math.round(step));
+        min = Math.max(1, Math.round(min));
+    }
+
+    return {
+        step: step > 0 ? step : 1,
+        min: min > 0 ? min : step,
+        max: max === '' ? '' : max,
+        precision: precision,
+        allowDecimals: allowDecimals
+    };
 }
 
 function closestValid(value, rules, direction) {
@@ -115,17 +137,21 @@ $input.data('wcuom-adjusting', false);
 }
 
 $(document).on('click', '.quantity .ct-increase', function (event) {
-event.preventDefault();
-var $input = $(this).siblings('input.qty');
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+    var $input = $(this).siblings('input.qty');
 
-if ($input.length) {
-adjustInput($input, 'up');
-}
+    if ($input.length) {
+        adjustInput($input, 'up');
+    }
 });
 
 $(document).on('click', '.quantity .ct-decrease', function (event) {
-event.preventDefault();
-var $input = $(this).siblings('input.qty');
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+    var $input = $(this).siblings('input.qty');
 
 if ($input.length) {
 adjustInput($input, 'down');
